@@ -1,0 +1,27 @@
+.card {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  width: 500px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.main-title {
+  text-align: center;
+  font-size: 40px;
+  font-weight: bold;
+  color: #1f2937;
+  margin: 20px 0;
+}
+body {
+  font-size: 18px;
+  line-height: 1.8;
+}
+.page-container {
+  max-width: 1000px;
+  margin: 40px auto;
+  background: #f8fafc;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
