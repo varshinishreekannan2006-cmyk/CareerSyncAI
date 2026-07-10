@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 
 function Login() {
   const [isRegister, setIsRegister] = useState(false);
@@ -7,29 +8,55 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleRegister = () => {
-    const user = { name, email, password };
+    const handleRegister = async () => {
+  try {
+    const response = await axios.post(
+      "http://localhost:5000/api/auth/register",
+      {
+        name,
+        email,
+        password,
+      }
+    );
 
-    localStorage.setItem("user", JSON.stringify(user));
+    alert(response.data.message);
 
-    alert("Registration Successful!");
+    setIsRegister(false);
+
+    setName("");
+    setEmail("");
+    setPassword("");
+
+  } catch (error) {
+    alert(
+      error.response?.data?.message || "Registration Failed"
+    );
+  }
+};
+
+  const handleLogin = async () => {
+  try {
+    const response = await axios.post(
+      "http://localhost:5000/api/auth/login",
+      {
+        email,
+        password,
+      }
+    );
+
+    // Save JWT token
+    localStorage.setItem("token", response.data.token);
+
+    alert(response.data.message);
+
     window.location.reload();
-  };
 
-  const handleLogin = () => {
-    const savedUser = JSON.parse(localStorage.getItem("user"));
-
-    if (
-      savedUser &&
-      savedUser.email === email &&
-      savedUser.password === password
-    ) {
-      alert("Login Successful!");
-      window.location.reload();
-    } else {
-      alert("Invalid Email or Password");
-    }
-  };
+  } catch (error) {
+    alert(
+      error.response?.data?.message || "Login Failed"
+    );
+  }
+};
 
   const inputStyle = {
     width: "100%",

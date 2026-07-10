@@ -18,16 +18,11 @@ import Certifications from "./pages/Certifications";
 
 function App() {
 
-  const isLoggedIn = localStorage.getItem("user");
+  const isLoggedIn = localStorage.getItem("token");
 
 if (!isLoggedIn) {
   return <Login />;
 }
-    <BrowserRouter>
-      <Routes>
-        <Route path="*" element={<Login />} />
-      </Routes>
-    </BrowserRouter>
 
   return (
     <BrowserRouter>

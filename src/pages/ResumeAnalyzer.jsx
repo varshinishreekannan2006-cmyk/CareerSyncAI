@@ -24,8 +24,10 @@ function ResumeAnalyzer() {
   const [score, setScore] = useState(0);
   const [skills, setSkills] = useState([]);
   const [missingSkills, setMissingSkills] = useState([]);
+  const [aiSuggestions, setAiSuggestions] = useState(null); 
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [lastUploadTime, setLastUploadTime] = useState(0); // Rate limiting // Quota warnings
 
 let atsTips = [];
 
@@ -169,39 +171,66 @@ const currentDate = new Date().toLocaleDateString();
 };
   const analyzeResume = async () => {
 
+  // Rate limiting: prevent rapid successive uploads (2 second minimum between requests)
+  const now = Date.now();
+  if (now - lastUploadTime < 2000) {
+    alert("Please wait 2 seconds between resume uploads to avoid exceeding API limits.");
+    return;
+  }
+
   alert("Button Clicked");
 
   try {
     setLoading(true);
 
     if (!file) {
-  alert("Please select a PDF file first");
-  return;
-}
+      alert("Please select a PDF file first");
+      setLoading(false);
+      return;
+    }
 
-const formData = new FormData();
-formData.append("resume", file);
+    const formData = new FormData();
+    formData.append("resume", file);
 
-console.log(file);
+    console.log(file);
 
     console.log("Sending request...");
 
     console.log("FILE:", file);
     console.log("FORMDATA CREATED");
 
-    const response = await axios.post(
+    const token = localStorage.getItem("token");
+
+const response = await axios.post(
   "http://localhost:5000/api/resume/analyze",
-  formData
+  formData,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
 );
 
 console.log(response.data);
-
-console.log("Response received");
+    console.log("AI suggestions:", response.data.aiSuggestions);
 console.log(response.data);
 
     setScore(response.data.score);
     setSkills(response.data.detectedSkills);
     setMissingSkills(response.data.missingSkills);
+    try {
+  setAiSuggestions(JSON.parse(response.data.aiSuggestions));
+} catch (e) {
+  console.log("AI response is not valid JSON:", response.data.aiSuggestions);
+  setAiSuggestions({
+    careerPath: "",
+    strengths: [],
+    weaknesses: [],
+    recommendedSkills: [],
+    interviewQuestions: []
+  });
+}
+    
 
     const newHistory = {
   fileName,
@@ -218,6 +247,7 @@ localStorage.setItem(
   JSON.stringify(updatedHistory)
 );
 
+    setLastUploadTime(now); // Update last upload time
     setLoading(false);
 
   } catch (error) {
@@ -757,25 +787,9 @@ Resume Analyzer
     color: "#000"
   }}
 >
-  Interview Questions
-</h3>
-          <ul>
-  {interviewQuestions.map((question, index) => (
-    <li key={index} style={{ fontSize: "20px", color: "#000", lineHeight: "2" }}>
-      {question}
-    </li>
-  ))}
-</ul>
-
-          <h3
-  style={{
-    fontSize: "28px",
-    fontWeight: "bold",
-    color: "#000"
-  }}
->
   Job Suggestions
 </h3>
+
           <ul>
   {jobs.map((job, index) => (
     <li key={index} style={{ fontSize: "20px", color: "#000", lineHeight: "2" }}>
@@ -784,24 +798,37 @@ Resume Analyzer
   ))}
 </ul>
 
-          <h3
-  style={{
-    fontSize: "28px",
-    fontWeight: "bold",
-    color: "#000"
-  }}
->
-  Recommendation
-</h3>
-<p
-  style={{
-    fontSize: "20px",
-    lineHeight: "2",
-    color: "#000"
-  }}
->
-  Learn {missingSkills.slice(0, 3).join(", ")} to improve your placement opportunities.
-</p>
+  <h3>AI Career Suggestions</h3>
+
+<p><b>Career Path:</b> {aiSuggestions?.careerPath}</p>
+
+<h4>Strengths</h4>
+<ul>
+  {aiSuggestions?.strengths?.map((item, index) => (
+    <li key={index}>{item}</li>
+  ))}
+</ul>
+
+<h4>Weaknesses</h4>
+<ul>
+  {aiSuggestions?.weaknesses?.map((item, index) => (
+    <li key={index}>{item}</li>
+  ))}
+</ul>
+
+<h4>Recommended Skills</h4>
+<ul>
+  {aiSuggestions?.recommendedSkills?.map((item, index) => (
+    <li key={index}>{item}</li>
+  ))}
+</ul>
+
+<h4>Interview Questions</h4>
+<ul>
+  {aiSuggestions?.interviewQuestions?.map((item, index) => (
+    <li key={index}>{item}</li>
+  ))}
+</ul>
           <button
             className="btn btn-success"
             onClick={downloadReport}

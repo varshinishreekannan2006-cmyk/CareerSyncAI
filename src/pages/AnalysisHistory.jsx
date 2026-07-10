@@ -1,37 +1,104 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 function AnalysisHistory() {
-
   const [history, setHistory] = useState([]);
 
-  useEffect(() => {
-    const savedHistory = localStorage.getItem("resumeHistory");
+  const clearHistory = async () => {
+  try {
+    const token = localStorage.getItem("token");
 
-    if (savedHistory) {
-      setHistory(JSON.parse(savedHistory));
-    }
+    await axios.delete(
+      "http://localhost:5000/api/history",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setHistory([]);
+
+    alert("History deleted successfully");
+  } catch (err) {
+    console.log(err);
+    alert("Failed to delete history");
+  }
+};
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        console.log("Token:", token);
+
+        const res = await axios.get(
+          "http://localhost:5000/api/history",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        console.log(res.data);
+
+        setHistory(res.data);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchHistory();
   }, []);
 
   return (
-    <div className="container mt-4">
+    <div style={{ padding: "30px" }}>
       <h1>Analysis History</h1>
 
-      {history.length === 0 ? (
-        <p>No analysis history available yet.</p>
-      ) : (
-        <ul>
-          {history.map((item, index) => (
-            <li key={index}>
-              <strong>{item.fileName}</strong>
-              <br />
-              Score: {item.score}%
-              <br />
-              Date: {item.date}
-              <br /><br />
-            </li>
-          ))}
-        </ul>
-      )}
+      <button
+  onClick={clearHistory}
+  style={{
+    padding: "10px 20px",
+    background: "red",
+    color: "white",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    marginBottom: "20px",
+  }}
+>
+  🗑 Clear History
+</button>
+
+      {history.map((item) => (
+        <div
+          key={item._id}
+          style={{
+            border: "1px solid gray",
+            margin: "20px",
+            padding: "20px",
+            borderRadius: "10px",
+          }}
+        >
+          <h3>{item.fileName}</h3>
+
+          <p>Score: {item.score}%</p>
+
+          <p>
+            <b>Detected Skills:</b>{" "}
+            {item.detectedSkills.join(", ")}
+          </p>
+
+          <p>
+            <b>Missing Skills:</b>{" "}
+            {item.missingSkills.join(", ")}
+          </p>
+
+          <p>{new Date(item.analyzedAt).toLocaleString()}</p>
+        </div>
+      ))}
     </div>
   );
 }

@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 
 function Navbar() {
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
 
   const logout = () => {
-    localStorage.removeItem("user");
+    localStorage.removeItem("token");
     window.location.reload();
   };
 
@@ -14,7 +14,7 @@ function Navbar() {
     
     <nav>
 
-      {!user && <Link to="/login">Login</Link>}
+      {!token && <Link to="/login">Login</Link>}
 
       <Link to="/">Home</Link>{" | "}
       <Link to="/about">About</Link>{" | "}
